@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'none';">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<title>JDH4X Vault PRO</title>
+
+<style>
+  body {
+    background: #0a0a0a;
+    color: white;
+    text-align: center;
+    font-family: Arial;
+  }
+  .container { margin-top: 60px; }
+
+  /* Brand */
+  #brand {
+    margin-bottom: 6px;
+  }
+  #brand-name {
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: gold;
+    text-shadow: 0 0 18px rgba(255,215,0,0.5), 0 0 40px rgba(255,215,0,0.2);
+    display: block;
+  }
+  #brand-tag {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #555;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 4px;
+  }
+  #brand-line {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, gold, transparent);
+    margin: 10px auto 0;
+  }
+  input, button {
+    padding: 12px;
+    margin: 10px;
+    border-radius: 8px;
+    border: none;
+  }
+  button {
+    background: gold;
+    cursor: pointer;
+    font-weight: bold;
+    color: #000;
+  }
+  button:hover { background: #ffd700; opacity: 0.9; }
+  button:disabled { background: #888; cursor: not-allowed; color: #555; }
+  input {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid #333;
+  }
+  input:focus { outline: 2px solid gold; }
+  .hidden { display: none; }
+
+  /* Password wrapper with toggle */
+  .pass-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  .pass-wrap input {
+    padding-right: 44px;
+    width: 220px;
+  }
+  .eye-btn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: #555;
+    font-size: 16px;
+    line-height: 1;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+  }
+  .eye-btn:hover {
+    color: gold;
+    background: none;
+    opacity: 1;
+  }
+  .eye-btn:disabled {
+    background: none;
+    cursor: default;
+  }
+
+  /* Security badge strip */
+  #sec-badge {
+    font-size: 10px;
+    color: #555;
+    margin-top: 30px;
+    letter-spacing: 1px;
+  }
+
+  /* Attempt dots */
+  #attempt-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .adot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 1px solid #444;
+    background: transparent;
+    display: inline-block;
+    transition: background 0.3s;
+  }
+  .adot.used { background: #ff2244; border-color: #ff2244; }
+
+  /* Strength bar */
+  #strength-wrap {
+    width: 220px;
+    margin: 0 auto 6px;
+    text-align: left;
+  }
+  #strength-track {
+    height: 3px;
+    background: #222;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  #strength-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    transition: width 0.3s, background 0.3s;
+  }
+  #strength-label {
+    font-size: 10px;
+    color: #555;
+    margin-bottom: 3px;
+  }
+
+  /* Warn / ok messages */
+  #warn, #vault-warn {
+    font-size: 12px;
+    min-height: 18px;
+    margin: 4px 0;
+  }
+
+  /* Clipboard timer */
+  #clip-msg {
+    font-size: 11px;
+    color: gold;
+    min-height: 16px;
+    margin-top: 4px;
+  }
+
+  /* Session bar */
+  #sess-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: gold;
+    transform-origin: left;
+    transition: transform 0.5s linear;
+    z-index: 999;
+    display: none;
+  }
+
+  /* Lock overlay */
+  #lock-screen {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.97);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    display: none;
+  }
+  #lock-screen p {
+    color: #ff2244;
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-top: 12px;
+  }
+  #lock-icon { font-size: 50px; }
+</style>
+</head>
+<body>
+
+<!-- Session countdown bar -->
+<div id="sess-bar"></div>
+
+<!-- Lock Screen -->
+<div id="lock-screen">
+  <div id="lock-icon">🔒</div>
+  <p id="lock-msg">LOCKED — WAIT 30s</p>
+</div>
+
+<!-- LOGIN -->
+<div class="container" id="loginBox">
+
+  <!-- Brand -->
+  <div id="brand">
+    <span id="brand-name">JDH4X</span>
+
+    <div id="brand-line"></div>
+  </div>
+
+
+
+  <div id="attempt-row">
+    <span class="adot" id="d0"></span>
+    <span class="adot" id="d1"></span>
+    <span class="adot" id="d2"></span>
+  </div>
+
+  <div id="strength-wrap">
+    <div id="strength-label">Password Strength</div>
+    <div id="strength-track"><div id="strength-fill"></div></div>
+  </div>
+
+  <div class="pass-wrap">
+    <input type="password" id="masterPass" placeholder="Enter Master Password"
+           autocomplete="off" spellcheck="false" maxlength="128">
+    <button class="eye-btn" id="eyeBtn" onclick="togglePass()" type="button" title="Show/Hide Password" tabindex="-1">
+      <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+    </button>
+  </div><br>
+
+  <button onclick="doLogin()">Enter</button>
+  <p id="warn"></p>
+</div>
+
+<!-- VAULT -->
+<div class="container hidden" id="vault">
+  <div style="margin-bottom:18px">
+    <span style="font-size:24px;font-weight:900;letter-spacing:5px;color:gold;text-shadow:0 0 12px rgba(255,215,0,0.4)">JDH4X</span>
+    <span style="font-size:11px;color:#555;letter-spacing:3px;display:block;margin-top:2px">VAULT ACTIVE</span>
+  </div>
+
+  <!-- Mode selector — same layout, 4 simple buttons -->
+  <div style="margin-bottom:8px">
+    <button onclick="setMode('standard')" id="m-standard" style="padding:6px 10px;font-size:12px">STD</button>
+    <button onclick="setMode('wifi')"     id="m-wifi"     style="padding:6px 10px;font-size:12px">WPA2</button>
+    <button onclick="setMode('pin')"      id="m-pin"      style="padding:6px 10px;font-size:12px">PIN</button>
+    <button onclick="setMode('hex')"      id="m-hex"      style="padding:6px 10px;font-size:12px">HEX</button>
+  </div>
+
+  <input id="username" placeholder="Username" autocomplete="off" spellcheck="false" maxlength="128">
+  <input id="key"      placeholder="Secret Key" autocomplete="off" spellcheck="false" maxlength="128"><br>
+  <input id="counter"  type="number" value="1" min="1" max="99"
+         placeholder="Version" style="width:80px" title="Version/Counter"><br>
+
+  <button onclick="generate()">Generate</button><br>
+
+  <input id="result" readonly style="width:260px;letter-spacing:2px"><br>
+
+  <div id="clip-msg"></div>
+  <p id="vault-warn"></p>
+
+  <button onclick="copyPass()">Copy</button>
+  <button onclick="doLogout()">Logout</button>
+
+
+</div>
+
+<script>
+"use strict";
+
+/* =====================================================
+   CONSTANTS  — all security parameters in one place
+===================================================== */
+const C = Object.freeze({
+  MAX_ATTEMPTS  : 3,
+  LOCK_MS       : 30_000,
+  SESSION_MS    : 300_000,
+  CLIP_S        : 30,
+  ITER          : 500_000,   // PBKDF2 iterations (NIST 2023 recommendation)
+  HASH          : "SHA-512", // upgraded from SHA-256
+  AUTH_SALT     : "JDH4X|AUTH|ULTRA|v4",
+  VAULT_SALT    : "JDH4X|VAULT|ULTRA|v4",
+  MIN_LEN       : 8,
+});
+
+const MODES = {
+  standard : { len:16, chars:"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@?*&!$%^+=~" },
+  wifi     : { len:20, chars:"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" },
+  pin      : { len:6,  chars:"0123456789" },
+  hex      : { len:32, chars:"0123456789abcdef" },
+};
+
+/* =====================================================
+   STATE — mutable, wiped on logout
+===================================================== */
+let _key      = null;
+let _attempts = 0;
+let _locked   = false;
+let _lockTmr  = null;
+let _sessTmr  = null;
+let _sessRAF  = null;
+let _sessStart= 0;
+let _clipTmr  = null;
+let _clipRAF  = null;
+let _clipEnd  = 0;
+let _mode     = "standard";
+
+/* =====================================================
+   UTILITIES
+===================================================== */
+const enc = new TextEncoder();
+
+function clean(v){
+  return String(v)
+    .replace(/[<>"'`\\\x00-\x1f\x7f]/g,"")
+    .replace(/\s+/g," ")
+    .trim()
+    .slice(0,128);
+}
+
+function setWarn(el, msg, cls, ms){
+  const e = document.getElementById(el);
+  e.textContent = msg;
+  e.style.color = cls === "err" ? "#ff2244" : cls === "ok" ? "#00ff88" : "gold";
+  if(ms) setTimeout(()=>{ e.textContent=""; }, ms);
+}
+
+function refreshDots(){
+  for(let i=0;i<C.MAX_ATTEMPTS;i++){
+    document.getElementById("d"+i).classList.toggle("used", i < _attempts);
+  }
+}
+
+/* =====================================================
+   PASSWORD STRENGTH METER
+===================================================== */
+function calcEntropy(pw){
+  let p=0;
+  if(/[a-z]/.test(pw)) p+=26;
+  if(/[A-Z]/.test(pw)) p+=26;
+  if(/[0-9]/.test(pw)) p+=10;
+  if(/[^a-zA-Z0-9]/.test(pw)) p+=32;
+  return p ? Math.floor(pw.length * Math.log2(p)) : 0;
+}
+
+function updateStrength(pw){
+  const e   = calcEntropy(pw);
+  const pct = Math.min(100, (e/80)*100);
+  const fill= document.getElementById("strength-fill");
+  const lbl = document.getElementById("strength-label");
+  fill.style.width = pct + "%";
+  if(e < 28)      { fill.style.background="#ff2244"; lbl.textContent=`WEAK (${e} bits)`; lbl.style.color="#ff2244"; }
+  else if(e < 48) { fill.style.background="gold";    lbl.textContent=`FAIR (${e} bits)`; lbl.style.color="gold"; }
+  else if(e < 64) { fill.style.background="#0af";    lbl.textContent=`GOOD (${e} bits)`; lbl.style.color="#0af"; }
+  else            { fill.style.background="#00ff88"; lbl.textContent=`STRONG (${e} bits)`;lbl.style.color="#00ff88"; }
+}
+
+/* =====================================================
+   CRYPTO  — PBKDF2 + DOUBLE-HMAC CHAIN
+===================================================== */
+async function deriveKey(password, salt){
+  const base = await crypto.subtle.importKey(
+    "raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name:"PBKDF2", salt:enc.encode(salt), iterations:C.ITER, hash:C.HASH },
+    base,
+    { name:"HMAC", hash:"SHA-256", length:256 },
+    false, ["sign"]
+  );
+}
+
+async function hmacSign(key, data){
+  return crypto.subtle.sign("HMAC", key, enc.encode(String(data)));
+}
+
+function buildPassword(sig1, sig2, charset, length){
+  const b1  = new Uint8Array(sig1);
+  const b2  = new Uint8Array(sig2);
+  const mix = new Uint8Array(64);
+  for(let i=0;i<32;i++){
+    mix[i*2]   = b1[i] ^ b2[i];
+    mix[i*2+1] = b1[i+32] ^ b2[i % b2.length];
+  }
+  let out = "";
+  for(let i=0;i<length;i++){
+    const v = (mix[i*2] << 8) | mix[i*2+1];
+    out += charset[v % charset.length];
+  }
+  return out;
+}
+
+/* =====================================================
+   SESSION BAR
+===================================================== */
+function sessRafTick(){
+  const elapsed = Date.now() - _sessStart;
+  const pct = Math.max(0, 1 - elapsed/C.SESSION_MS);
+  document.getElementById("sess-bar").style.transform = `scaleX(${pct})`;
+  if(pct > 0) _sessRAF = requestAnimationFrame(sessRafTick);
+}
+
+function startSession(){
+  clearTimeout(_sessTmr);
+  cancelAnimationFrame(_sessRAF);
+  _sessStart = Date.now();
+  const bar = document.getElementById("sess-bar");
+  bar.style.display = "block";
+  bar.style.transform = "scaleX(1)";
+  sessRafTick();
+  _sessTmr = setTimeout(doLogout, C.SESSION_MS);
+}
+
+function resetSession(){
+  clearTimeout(_sessTmr);
+  _sessStart = Date.now();
+  _sessTmr = setTimeout(doLogout, C.SESSION_MS);
+}
+
+/* =====================================================
+   CLIPBOARD AUTO-WIPE
+===================================================== */
+function startClipWipe(){
+  clearTimeout(_clipTmr);
+  cancelAnimationFrame(_clipRAF);
+  _clipEnd = Date.now() + C.CLIP_S * 1000;
+  const msg = document.getElementById("clip-msg");
+  function tick(){
+    const rem = Math.ceil((_clipEnd - Date.now())/1000);
+    if(rem <= 0){
+      navigator.clipboard?.writeText("").catch(()=>{});
+      msg.textContent = "";
+      return;
+    }
+    msg.textContent = `🗑 Clipboard clears in ${rem}s`;
+    _clipRAF = requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+/* =====================================================
+   LOCK
+===================================================== */
+function triggerLock(){
+  _locked = true;
+  const lo = document.getElementById("lock-screen");
+  lo.style.display = "flex";
+  document.getElementById("lock-msg").textContent = "LOCKED — WAIT 30s";
+  clearTimeout(_lockTmr);
+  _lockTmr = setTimeout(()=>{
+    _locked   = false;
+    _attempts = 0;
+    refreshDots();
+    lo.style.display = "none";
+    setWarn("warn","UNLOCKED — RETRY","ok",3000);
+  }, C.LOCK_MS);
+}
+
+/* =====================================================
+   MODE SELECTOR
+===================================================== */
+function setMode(m){
+  _mode = m;
+  ["standard","wifi","pin","hex"].forEach(k=>{
+    const btn = document.getElementById("m-"+k);
+    btn.style.background = k===m ? "#ffd700" : "gold";
+    btn.style.opacity    = k===m ? "1" : "0.55";
+  });
+  document.getElementById("result").value = "";
+  document.getElementById("clip-msg").textContent = "";
+}
+setMode("standard"); // init
+
+/* =====================================================
+   LOGIN
+===================================================== */
+async function doLogin(){
+  if(_locked) return;
+  const pass = document.getElementById("masterPass").value;
+
+  if(pass.length < C.MIN_LEN){
+    _attempts++;
+    refreshDots();
+    if(_attempts >= C.MAX_ATTEMPTS){ triggerLock(); }
+    else setWarn("warn", `Min ${C.MIN_LEN} characters`, "err");
+    document.getElementById("masterPass").value = "";
+    return;
+  }
+
+  const btn = document.querySelector("#loginBox button");
+  btn.disabled = true;
+  btn.textContent = "Verifying…";
+
+  try{
+    _key = await deriveKey(pass, C.AUTH_SALT);
+    document.getElementById("masterPass").value = "";
+    _attempts = 0;
+    refreshDots();
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("vault").classList.remove("hidden");
+    startSession();
+  } catch(e){
+    setWarn("warn","Error — retry","err",3000);
+  } finally{
+    btn.disabled = false;
+    btn.textContent = "Enter";
+  }
+}
+
+// Keep original login() alias so existing bookmarks/habits work
+const login = doLogin;
+
+/* =====================================================
+   GENERATE
+===================================================== */
+async function generate(){
+  if(!_key){ doLogout(); return; }
+
+  const user    = clean(document.getElementById("username").value);
+  const site    = clean(document.getElementById("key").value);
+  const counter = parseInt(document.getElementById("counter").value,10) || 1;
+
+  if(!user || !site){
+    setWarn("vault-warn","Fill all fields","err",2000);
+    return;
+  }
+
+  const btn = document.querySelector("#vault button");
+  btn.disabled = true;
+
+  try{
+    // Step 1: Derive a per-vault key (separate from auth key)
+    const vaultKey = await deriveKey(
+      user + "||" + site + "||" + counter + "||" + _mode,
+      C.VAULT_SALT + "|" + _mode
+    );
+
+    // Step 2: HMAC with vault key
+    const payload = `${user}|${site}|${counter}|${_mode}|JDH4X`;
+    const sig1    = await hmacSign(vaultKey, payload);
+
+    // Step 3: HMAC again with auth key (double-chain)
+    const sig2    = await hmacSign(_key, new Uint8Array(sig1).join(","));
+
+    // Step 4: XOR-mix both signatures → build password
+    const m   = MODES[_mode];
+    const pwd = buildPassword(sig1, sig2, m.chars, m.len);
+
+    document.getElementById("result").value = pwd;
+    setWarn("vault-warn","Generated","ok",2000);
+    resetSession();
+  } catch(e){
+    setWarn("vault-warn","Generation failed","err",3000);
+  } finally{
+    btn.disabled = false;
+  }
+}
+
+/* =====================================================
+   COPY
+===================================================== */
+async function copyPass(){
+  const val = document.getElementById("result").value;
+  if(!val) return;
+  try{
+    await navigator.clipboard.writeText(val);
+  } catch{
+    document.getElementById("result").select();
+    document.execCommand("copy");
+  }
+  startClipWipe();
+}
+
+/* =====================================================
+   LOGOUT — wipe everything
+===================================================== */
+function doLogout(){
+  _key = null;
+  clearTimeout(_sessTmr);
+  cancelAnimationFrame(_sessRAF);
+  cancelAnimationFrame(_clipRAF);
+  document.getElementById("sess-bar").style.display = "none";
+  document.getElementById("result").value = "";
+  document.getElementById("username").value = "";
+  document.getElementById("key").value = "";
+  document.getElementById("counter").value = "1";
+  document.getElementById("clip-msg").textContent = "";
+  document.getElementById("vault-warn").textContent = "";
+  navigator.clipboard?.writeText("").catch(()=>{});
+  document.getElementById("vault").classList.add("hidden");
+  document.getElementById("loginBox").classList.remove("hidden");
+}
+
+// Keep original logout() alias
+const logout = doLogout;
+
+/* =====================================================
+   SECURITY GUARDS
+===================================================== */
+
+// 1. Tab hidden → auto logout
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden && _key) doLogout();
+});
+
+// 2. DevTools guard (debugger pause detection)
+(function devGuard(){
+  let hit = false;
+  setInterval(()=>{
+    const t = performance.now();
+    debugger;
+    if(performance.now()-t > 80 && !hit){
+      hit = true;
+      if(_key) doLogout();
+    }
+    hit = false;
+  }, 3000);
+})();
+
+// 3. Activity extends session
+["keydown","mousedown","touchstart"].forEach(e=>{
+  document.addEventListener(e, ()=>{ if(_key) resetSession(); }, {passive:true});
+});
+
+// 4. Keyboard: Enter on password field
+document.getElementById("masterPass").addEventListener("keydown", e=>{
+  if(e.key==="Enter") doLogin();
+});
+document.getElementById("masterPass").addEventListener("input", function(){
+  updateStrength(this.value);
+});
+
+/* =====================================================
+   PASSWORD SHOW/HIDE TOGGLE
+===================================================== */
+function togglePass(){
+  const inp  = document.getElementById("masterPass");
+  const icon = document.getElementById("eye-icon");
+  const btn  = document.getElementById("eyeBtn");
+  const show = inp.type === "password";
+  inp.type   = show ? "text" : "password";
+  btn.style.color = show ? "gold" : "#555";
+  icon.innerHTML  = show
+    ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+       <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+       <line x1="1" y1="1" x2="23" y2="23"/>`
+    : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+}
+
+// 5. Prevent right-click (minor annoyance to casual snoops)
+document.addEventListener("contextmenu", e=> e.preventDefault());
+
+/* =====================================================
+   INIT
+===================================================== */
+refreshDots();
+document.getElementById("masterPass").focus();
+</script>
+</body>
+</html>
